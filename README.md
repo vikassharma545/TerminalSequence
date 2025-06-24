@@ -10,7 +10,7 @@ A Python script to arrange Python and Windows Terminal windows in a 5x6 grid on 
 
 ## Installation
 
-Run the following PowerShell command to clone the repository to `C:\Program Files\TerminalPosition` and set up the context menu:
+Run the following PowerShell command in Admin Mode to clone the repository to `C:\Program Files\TerminalPosition` and set up the context menu:
 
 ```powershell
 $repoPath = "C:\Program Files\TerminalPosition"; if (Test-Path $repoPath) { Remove-Item -Recurse -Force $repoPath }; git clone https://github.com/vikassharma545/TerminalSequence.git $repoPath; cd $repoPath; Start-Process cmd.exe -ArgumentList "/c setup_context_menu.bat" -Verb RunAs
