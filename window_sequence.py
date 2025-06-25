@@ -53,7 +53,7 @@ for window in all_windows:
     proc = psutil.Process(pid)
     if ('python.exe' in proc.name() or 'py.exe' in proc.name()) and ('Set Position' not in window.title):
         print(window.title)
-        python_windows.append(window)
+        python_windows.append((window, window.title))
 
 if len(python_windows) > 0:
 
@@ -67,7 +67,7 @@ if len(python_windows) > 0:
     x, y = monitor.x, monitor.y
 
     fill_row = 1
-    for window in python_windows:
+    for window, window_title in python_windows:
         try:
             hwnd = window
             hwnd.restore()
