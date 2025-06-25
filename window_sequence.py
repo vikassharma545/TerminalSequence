@@ -1,6 +1,7 @@
 import ctypes
 ctypes.windll.kernel32.SetConsoleTitleW("Set Position")
 
+import re
 import psutil
 import screeninfo
 import win32process
@@ -55,7 +56,8 @@ for window in all_windows:
         python_windows.append(window)
 
 if len(python_windows) > 0:
-    
+
+    python_windows = sorted(python_windows, key=lambda x: int(re.search(r'\[(\d+)\]', x[1]).group(1)) if '[' in x[1] else float('-inf'))
     monitor = get_clicked_monitor()
     
     row, col = 5, 6
