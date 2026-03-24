@@ -17,23 +17,23 @@ if '%errorlevel%' NEQ '0' (
     pushd "%CD%"
     CD /D "%~dp0"
 
-:: Install dependencies
+:: Find Python executable first
+set "PYTHON_EXEC="
+for %%i in (python.exe) do set "PYTHON_EXEC=%%~$PATH:i"
+if "%PYTHON_EXEC%"=="" (
+    echo Error: Python not found in PATH. Please ensure Python is installed and added to PATH.
+    pause
+    exit /B
+)
+
+:: Install dependencies using the found Python
 echo Installing Python dependencies...
-pip install psutil screeninfo pygetwindow pywin32
+"%PYTHON_EXEC%" -m pip install psutil screeninfo pygetwindow pywin32
 
 :: Set script path
 set "SCRIPT_PATH=C:\Program Files\TerminalPosition\window_sequence.py"
 if not exist "%SCRIPT_PATH%" (
     echo Error: window_sequence.py not found in C:\Program Files\TerminalPosition
-    pause
-    exit /B
-)
-
-:: Find Python executable
-set "PYTHON_EXEC="
-for %%i in (python.exe) do set "PYTHON_EXEC=%%~$PATH:i"
-if "%PYTHON_EXEC%"=="" (
-    echo Error: Python not found in PATH. Please ensure Python is installed and added to PATH.
     pause
     exit /B
 )

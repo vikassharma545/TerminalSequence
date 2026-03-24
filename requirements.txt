@@ -1,0 +1,4 @@
+psutil
+screeninfo
+PyGetWindow
+pywin32

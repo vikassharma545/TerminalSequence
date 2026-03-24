@@ -2,6 +2,7 @@ import ctypes
 ctypes.windll.kernel32.SetConsoleTitleW("Set Position")
 
 import re
+import sys
 import psutil
 import screeninfo
 import win32process
@@ -16,6 +17,7 @@ def get_clicked_monitor():
     monitors = screeninfo.get_monitors()
     
     if len(monitors) == 1:
+        main_root.destroy()
         return monitors[0]
 
     def close_all_popups(popups, main_root, monitor_num, clicked_monitor):
@@ -43,48 +45,72 @@ def get_clicked_monitor():
         popups.append(popup)
 
     main_root.mainloop()  # Start the event loop
-    return monitors[clicked_monitor[0]-1]  # Return the clicked monitor number
 
-all_windows = gw.getAllWindows()
+    # User closed the picker without clicking a monitor button
+    if clicked_monitor[0] is None:
+        return None
 
-python_windows = []
-for window in all_windows:
-    pid = win32process.GetWindowThreadProcessId(window._hWnd)[1]
-    proc = psutil.Process(pid)
-    if ('python.exe' in proc.name() or 'py.exe' in proc.name()) and ('Set Position' not in window.title):
-        print(window.title)
-        python_windows.append((window, window.title))
+    return monitors[clicked_monitor[0]-1]  # Return the clicked monitor
 
-if len(python_windows) > 0:
 
-    python_windows = sorted(python_windows, key=lambda x: int(re.search(r'\[(\d+)\]', x[1]).group(1)) if '[' in x[1] else float('-inf'))
-    monitor = get_clicked_monitor()
-    
-    row, col = 5, 6
-    width = abs(int(monitor.width/col)) + 20
-    height = abs(int(monitor.height/row)) - 7
+def sort_key(x):
+    """Sort windows by the number inside brackets [N] in their title."""
+    match = re.search(r'\[(\d+)\]', x[1])
+    return int(match.group(1)) if match else float('-inf')
 
-    x, y = monitor.x, monitor.y
 
-    fill_row = 1
-    for window, window_title in python_windows:
+def main():
+    all_windows = gw.getAllWindows()
+
+    python_windows = []
+    for window in all_windows:
         try:
-            hwnd = window
-            hwnd.restore()
-            hwnd.moveTo(x, y)
-            hwnd.resizeTo(width, height)
-            if fill_row == row:
-                fill_row = 1
-                x+=width - 14
-                y = monitor.y
-            else:
-                fill_row += 1
-                y+=height - 7
-        except IndexError:
-            pass
-        except Exception as e:
-            print(e)
-        sleep(0.1)
-else:
-    print("No terminal Found !!!")
-    sleep(2)
+            pid = win32process.GetWindowThreadProcessId(window._hWnd)[1]
+            proc = psutil.Process(pid)
+        except (psutil.AccessDenied, psutil.NoSuchProcess, OSError):
+            continue
+        if ('python.exe' in proc.name() or 'py.exe' in proc.name()) and ('Set Position' not in window.title):
+            print(window.title)
+            python_windows.append((window, window.title))
+
+    if len(python_windows) > 0:
+
+        python_windows = sorted(python_windows, key=sort_key)
+        monitor = get_clicked_monitor()
+
+        if monitor is None:
+            print("No monitor selected. Exiting.")
+            sys.exit(0)
+        
+        row, col = 5, 6
+        width = abs(int(monitor.width/col)) + 20
+        height = abs(int(monitor.height/row)) - 7
+
+        x, y = monitor.x, monitor.y
+
+        fill_row = 1
+        for window, window_title in python_windows:
+            try:
+                hwnd = window
+                hwnd.restore()
+                hwnd.moveTo(x, y)
+                hwnd.resizeTo(width, height)
+                if fill_row == row:
+                    fill_row = 1
+                    x+=width - 14
+                    y = monitor.y
+                else:
+                    fill_row += 1
+                    y+=height - 7
+            except IndexError:
+                pass
+            except Exception as e:
+                print(e)
+            sleep(0.1)
+    else:
+        print("No terminal Found !!!")
+        sleep(2)
+
+
+if __name__ == "__main__":
+    main()
